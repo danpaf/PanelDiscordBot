@@ -1,22 +1,32 @@
+using System.Text;
 using DSharpPlus;
+using Newtonsoft.Json;
 
 namespace MainBot;
 
-public class Worker : BackgroundService
+public class Bot : BackgroundService
 {
-    private readonly ILogger<Worker> _logger;
-
-    public Worker(ILogger<Worker> logger)
-    {
-        _logger = logger;
-    }
-
+    public static DiscordClient Discord;
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-            await Task.Delay(1000, stoppingToken);
-        }
+               
+               
+                Discord = new DiscordClient(new DiscordConfiguration
+                {
+                    Token = "",
+                    TokenType = TokenType.Bot,
+                    Intents = DiscordIntents.All
+                });
+                Discord.MessageCreated += async (s,e) =>
+                {
+                    if (e.Message.Content.ToLower().StartsWith("ping")) 
+                        await e.Message.RespondAsync("pong!");
+
+                };
+
+                await Discord.ConnectAsync();
+                await Task.Delay(-1);
+            
     }
 }
+
