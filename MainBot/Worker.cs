@@ -17,6 +17,7 @@ public class Bot : BackgroundService
         {
             Token = configuration["token"],
             TokenType = TokenType.Bot,
+            Intents = DiscordIntents.All
         });
 
         _configuration = configuration;
@@ -44,7 +45,6 @@ public class Bot : BackgroundService
         };
         this.Commands = this._discord.UseCommandsNext(ccfg);
         this.Commands.RegisterCommands<Moderating>();
-        this.Commands.RegisterCommands<AdminCmds>();
 
         await _discord.ConnectAsync();
         await Task.Delay(-1);

@@ -7,6 +7,63 @@ namespace MainBot.Commands;
 
 public class Moderating : BaseCommandModule
 {
+    [Command("ban")]
+    public async Task BanUser(CommandContext ctx, [Description("The user to ban")] DiscordMember member, [RemainingText, Description("The reason for the ban")] string reason)
+    {
+        if (!ctx.Member.PermissionsIn(ctx.Channel).HasPermission(Permissions.BanMembers))
+        {
+            await ctx.RespondAsync("Не достаточно прав для бана.");
+            return;
+        }
+        if (reason == null)
+        {
+            reason = "Без причины";
+        }
+        await member.BanAsync(reason: reason);
+        await Funcs.SendEmbedMessage(ctx, "Бан", $"{member.Username}#{member.Discriminator}\nПричина: {reason} ",DateTime.Now);
+    }
+    
+
+    [Command("unban")]
+    public async Task UnbanUser(CommandContext ctx, [Description("The user to unban")] ulong userId, [RemainingText, Description("The reason for the unban")] string reason)
+    {
+        if (!ctx.Member.PermissionsIn(ctx.Channel).HasPermission(Permissions.BanMembers))
+        {
+            await ctx.RespondAsync("Не достаточно прав для бана.");
+            return;
+        }
+        var ban = await ctx.Guild.GetBanAsync(userId);
+        if (ban == null)
+        {
+            await ctx.RespondAsync("The specified user is not banned.");
+            return;
+        }
+        if (reason == null)
+        {
+            reason = "Без причины";
+        }
+        await ctx.Guild.UnbanMemberAsync(userId);
+        //await ctx.RespondAsync($"{ban.User.Username}#{ban.User.Discriminator} has been unbanned for the reason: {reason}");
+        await Funcs.SendEmbedMessage(ctx, "Разбан", $"{ban.User.Username}#{ban.User.Discriminator}\nПричина: {reason}",DateTime.Now);
+    }
+    [Command("kick")]
+    [Description("kicks member ferom guild")]
+    public async Task kick(CommandContext ctx, DiscordMember member,[RemainingText, Description("The reason for the unban")] string reason)
+    {
+        if (!ctx.Member.PermissionsIn(ctx.Channel).HasPermission(Permissions.KickMembers))
+        {
+            await ctx.RespondAsync("Не достаточно прав для кика.");
+            return;
+        }
+        if (reason == null)
+        {
+            reason = "Без причины";
+        }
+        await member.RemoveAsync();
+        await Funcs.SendEmbedMessage(ctx, "Кик", $"{member.Username}#{member.Discriminator}\nПричина: {reason}",DateTime.Now);
+
+    }
+    
     [Command("ping")] // let's define this method as a command
     [Description(
         "Example ping command")] // this will be displayed to tell users what this command does when they invoke help
@@ -39,35 +96,3 @@ public class Moderating : BaseCommandModule
     }
 }
 
-[Group("Admin")]
-[Description("Administrative commands.")]
-[Hidden]
-[RequirePermissions(Permissions.ManageGuild)]
-public class AdminCmds : BaseCommandModule
-{
-
-    [Command("sudo"), Description("Executes a command as another user."), Hidden, RequireOwner]
-    public async Task Sudo(CommandContext ctx, [Description("Member to execute as.")] DiscordMember member,
-        [RemainingText, Description("Command text to execute.")]
-        string command)
-    {
-        await ctx.TriggerTypingAsync();
-        
-        var cmds = ctx.CommandsNext;
-        var cmd = cmds.FindCommand(command, out var customArgs);
-        var fakeContext = cmds.CreateFakeContext(member, ctx.Channel, command, ctx.Prefix, cmd, customArgs);
-
-        await cmds.ExecuteCommandAsync(fakeContext);
-    }
-
-    [Command("ban"), Description("Executes a command as another user."), Hidden]
-    public async Task Ban(CommandContext ctx, [Description("Member to execute as.")] DiscordMember member,
-        [RemainingText, Description("Command text to execute.")]
-        string command)
-
-    {
-        await ctx.TriggerTypingAsync();
-
-        await Funcs.BanMemberAsync(ctx.Client, member, 7, "Violation of community guidelines");
-    }
-}
