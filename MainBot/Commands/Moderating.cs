@@ -12,7 +12,7 @@ namespace MainBot.Commands;
 
 public class Moderating : BaseCommandModule
 {
-    
+
     [Command("ping")] // let's define this method as a command
     [Description("Example ping command")] // this will be displayed to tell users what this command does when they invoke help
     [Aliases("pong")] // alternative names for the command
@@ -57,6 +57,14 @@ public class Moderating : BaseCommandModule
     [RequirePermissions(Permissions.ManageGuild)] 
     public class AdminCmds : BaseCommandModule
     {
+        
+        
+        private readonly DiscordClient _client;
+
+        public AdminCmds(DiscordClient client)
+        {
+            _client = client;
+        }
        
         [Command("sudo"), Description("Executes a command as another user."), Hidden, RequireOwner]
         public async Task Sudo(CommandContext ctx, [Description("Member to execute as.")] DiscordMember member,
@@ -76,6 +84,18 @@ public class Moderating : BaseCommandModule
 
             await cmds.ExecuteCommandAsync(fakeContext);
         }
+        [Command("ban"), Description("Executes a command as another user."), Hidden]
+        public async Task Ban(CommandContext ctx, [Description("Member to execute as.")] DiscordMember member,
+            [RemainingText, Description("Command text to execute.")] string command)
+        
+        {
+            
+            await ctx.TriggerTypingAsync();
+            
+            await Funcs.BanMemberAsync(_client, member, 7, "Violation of community guidelines");
+            
+        }
+        
     }
 
 

@@ -4,16 +4,17 @@ using System.Threading.Tasks;
 
 namespace MainBot;
 
-public class Funcs : BackgroundService
+public static class Funcs
 {
-    public async Task DeleteMessagesAsync(DiscordClient client, DiscordChannel channel, int count)
+    public static async Task DeleteMessagesAsync(DiscordClient discord, DiscordChannel channel, int count)
     {
         var messages = await channel.GetMessagesAsync(count);
         await channel.DeleteMessagesAsync(messages);
     }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        Console.WriteLine("Funcs loaded");
+    
+    public static async Task BanMemberAsync(DiscordClient discord, DiscordMember member, int daysOfMessagesToDelete = 0, string reason = "") {
+        await member.BanAsync(daysOfMessagesToDelete, reason);
     }
+    
+    
 }
