@@ -14,11 +14,7 @@ public class Moderating : BaseCommandModule
     public async Task Ping(CommandContext ctx) // this command takes no arguments
     {
         await ctx.TriggerTypingAsync();
-
-
         var emoji = DiscordEmoji.FromName(ctx.Client, ":ping_pong:");
-
-
         await ctx.RespondAsync($"{emoji} Pong! Ping: {ctx.Client.Ping}ms");
     }
 
@@ -36,10 +32,8 @@ public class Moderating : BaseCommandModule
         // let's trigger a typing indicator to let
         // users know we're working
         await ctx.TriggerTypingAsync();
-
         // let's make the message a bit more colourful
         var emoji = DiscordEmoji.FromName(ctx.Client, ":wave:");
-
         // and finally, let's respond and greet the user.
         await ctx.RespondAsync($"{emoji} Hello, {member.Mention}!");
     }
@@ -58,14 +52,9 @@ public class AdminCmds : BaseCommandModule
         string command)
     {
         await ctx.TriggerTypingAsync();
-
-
+        
         var cmds = ctx.CommandsNext;
-
-
         var cmd = cmds.FindCommand(command, out var customArgs);
-
-
         var fakeContext = cmds.CreateFakeContext(member, ctx.Channel, command, ctx.Prefix, cmd, customArgs);
 
         await cmds.ExecuteCommandAsync(fakeContext);

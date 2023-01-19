@@ -1,11 +1,6 @@
-using System.Text;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using DSharpPlus.Entities;
 using MainBot.Commands;
-using Newtonsoft.Json;
-using DSharpPlus.Menus;
-using Nefarius.DSharpPlus.Extensions.Hosting;
 
 namespace MainBot;
 
@@ -18,13 +13,17 @@ public class Bot : BackgroundService
     public Bot(IServiceScopeFactory scopeFactory
         , IConfiguration configuration)
     {
-        var scope = scopeFactory.CreateScope();
-        _discord = scope.ServiceProvider.GetRequiredService<DiscordClient?>();
+        _discord = new DiscordClient(new DiscordConfiguration
+        {
+            Token = configuration["token"],
+            TokenType = TokenType.Bot,
+        });
+
         _configuration = configuration;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    { 
+    {
         Dictionary<int, string> roles = new Dictionary<int, string>();
         roles = new Dictionary<int, string>()
         {
@@ -50,11 +49,4 @@ public class Bot : BackgroundService
         await _discord.ConnectAsync();
         await Task.Delay(-1);
     }
-}
-
-public struct ConfigJson
-{
-    [JsonProperty("token")] public string Token { get; private set; }
-
-    [JsonProperty("prefix")] public string CommandPrefix { get; private set; }
 }
