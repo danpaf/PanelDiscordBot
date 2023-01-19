@@ -1,30 +1,24 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+
 namespace MainBot.Commands;
-
-
-
 
 public class Moderating : BaseCommandModule
 {
-
     [Command("ping")] // let's define this method as a command
-    [Description("Example ping command")] // this will be displayed to tell users what this command does when they invoke help
+    [Description(
+        "Example ping command")] // this will be displayed to tell users what this command does when they invoke help
     [Aliases("pong")] // alternative names for the command
     public async Task Ping(CommandContext ctx) // this command takes no arguments
     {
-        
         await ctx.TriggerTypingAsync();
 
-        
+
         var emoji = DiscordEmoji.FromName(ctx.Client, ":ping_pong:");
 
-        
+
         await ctx.RespondAsync($"{emoji} Pong! Ping: {ctx.Client.Ping}ms");
     }
 
@@ -51,51 +45,40 @@ public class Moderating : BaseCommandModule
     }
 }
 
-    [Group("Admin")] 
-    [Description("Administrative commands.")] 
-    [Hidden]
-    [RequirePermissions(Permissions.ManageGuild)] 
-    public class AdminCmds : BaseCommandModule
+[Group("Admin")]
+[Description("Administrative commands.")]
+[Hidden]
+[RequirePermissions(Permissions.ManageGuild)]
+public class AdminCmds : BaseCommandModule
+{
+
+    [Command("sudo"), Description("Executes a command as another user."), Hidden, RequireOwner]
+    public async Task Sudo(CommandContext ctx, [Description("Member to execute as.")] DiscordMember member,
+        [RemainingText, Description("Command text to execute.")]
+        string command)
     {
-        
-        
-        private readonly DiscordClient _client;
+        await ctx.TriggerTypingAsync();
 
-        public AdminCmds(DiscordClient client)
-        {
-            _client = client;
-        }
-       
-        [Command("sudo"), Description("Executes a command as another user."), Hidden, RequireOwner]
-        public async Task Sudo(CommandContext ctx, [Description("Member to execute as.")] DiscordMember member,
-            [RemainingText, Description("Command text to execute.")] string command)
-        {
-          
-            await ctx.TriggerTypingAsync();
 
-           
-            var cmds = ctx.CommandsNext;
+        var cmds = ctx.CommandsNext;
 
-           
-            var cmd = cmds.FindCommand(command, out var customArgs);
 
-            
-            var fakeContext = cmds.CreateFakeContext(member, ctx.Channel, command, ctx.Prefix, cmd, customArgs);
+        var cmd = cmds.FindCommand(command, out var customArgs);
 
-            await cmds.ExecuteCommandAsync(fakeContext);
-        }
-        [Command("ban"), Description("Executes a command as another user."), Hidden]
-        public async Task Ban(CommandContext ctx, [Description("Member to execute as.")] DiscordMember member,
-            [RemainingText, Description("Command text to execute.")] string command)
-        
-        {
-            
-            await ctx.TriggerTypingAsync();
-            
-            await Funcs.BanMemberAsync(_client, member, 7, "Violation of community guidelines");
-            
-        }
-        
+
+        var fakeContext = cmds.CreateFakeContext(member, ctx.Channel, command, ctx.Prefix, cmd, customArgs);
+
+        await cmds.ExecuteCommandAsync(fakeContext);
     }
 
+    [Command("ban"), Description("Executes a command as another user."), Hidden]
+    public async Task Ban(CommandContext ctx, [Description("Member to execute as.")] DiscordMember member,
+        [RemainingText, Description("Command text to execute.")]
+        string command)
 
+    {
+        await ctx.TriggerTypingAsync();
+
+        await Funcs.BanMemberAsync(ctx.Client, member, 7, "Violation of community guidelines");
+    }
+}

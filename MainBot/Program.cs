@@ -1,6 +1,5 @@
 using DSharpPlus;
 using MainBot;
-using MainBot.Extensions;
 using Nefarius.DSharpPlus.Extensions.Hosting;
 
 IHost host = Host.CreateDefaultBuilder(args)
@@ -15,7 +14,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                 
             });
             discord.ConnectAsync().GetAwaiter().GetResult();
-            services.AddDiscordClient(discord);
+            services.AddSingleton(discord);
             services.AddHostedService<Bot>();
         })
     .Build();
