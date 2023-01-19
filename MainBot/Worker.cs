@@ -1,5 +1,6 @@
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.SlashCommands;
 using MainBot.Commands;
 
 namespace MainBot;
@@ -17,7 +18,8 @@ public class Bot : BackgroundService
         {
             Token = configuration["token"],
             TokenType = TokenType.Bot,
-            Intents = DiscordIntents.All
+            Intents = DiscordIntents.All,
+            
         });
 
         _configuration = configuration;
@@ -25,6 +27,8 @@ public class Bot : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+
+
         Dictionary<int, string> roles = new Dictionary<int, string>();
         roles = new Dictionary<int, string>()
         {
@@ -45,6 +49,7 @@ public class Bot : BackgroundService
         };
         this.Commands = this._discord.UseCommandsNext(ccfg);
         this.Commands.RegisterCommands<Moderating>();
+        
 
         await _discord.ConnectAsync();
         await Task.Delay(-1);
