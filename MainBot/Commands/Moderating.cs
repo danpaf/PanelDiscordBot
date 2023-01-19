@@ -2,14 +2,26 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
+using DSharpPlus.Lavalink;
+using MainBot.Enums;
 
 
 namespace MainBot.Commands;
 
 public class Moderating : BaseCommandModule
 {
-  
+    public static IConfiguration _configuration;
+    private readonly string[] _adminRoles;
+    private readonly string[] _ownerRoles;
+
+    /*public Moderating(IConfiguration configuration)
+    {
+        _configuration = configuration;
+        _adminRoles = _configuration.GetSection("roles:adminRoles").Get<string[]>();
+        _ownerRoles = _configuration.GetSection("roles:ownerRoles").Get<string[]>();
+    }*/
     private async Task DeleteCommandMessage(CommandContext ctx) {
         await ctx.Message.DeleteAsync();
     }
@@ -131,5 +143,41 @@ public class Moderating : BaseCommandModule
         var emoji = DiscordEmoji.FromName(ctx.Client, ":ping_pong:");
         await ctx.RespondAsync($"{emoji} Pong! Ping: {ctx.Client.Ping}ms");
     }
+    
+    [Command("role")]
+    public async Task RoleCommand(CommandContext ctx) {
+        await Funcs.CreateSelectMenu(ctx);
+    }
+    //TODO:Доделать StartActivity and StopActivity и права вызова!!!
+    [Command("StartActivity"),RequireRoles(RoleCheckMode.Any,"DevOps")]
+    public async Task StartActivity(CommandContext ctx,string name)
+    {
+        if (name == null)
+        {
+            name = "Работает и славно";
+        }
+        var activity = new DiscordActivity
+        {
+            Name = name,
+            
+            ActivityType = ActivityType.Playing
+        };
+        await ctx.Client.UpdateStatusAsync(activity);
+        
+    }
+    [Command("StopActivity")]
+    [RequireRoles(RoleCheckMode.All,"DevOps")]
+    public async Task StopActivity(CommandContext ctx) {
+        var activity = new DiscordActivity
+        {
+            Name = " ",
+            
+            ActivityType = ActivityType.Playing
+        };
+        await ctx.Client.UpdateStatusAsync(null);
+        
+    }
 }
+
+
 

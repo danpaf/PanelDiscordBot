@@ -3,6 +3,7 @@ using DSharpPlus.Entities;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Interactivity.Extensions;
 
 namespace MainBot;
 
@@ -53,9 +54,114 @@ public static class Funcs
             Title = $"Message from {message.Author.Username} in {message.Channel.Name}",
             Description = message.Content,
             Timestamp = message.Timestamp,
+            Color = DiscordColor.Green,
+            Author = new DiscordEmbedBuilder.EmbedAuthor
+            {
+                IconUrl = message.Author.AvatarUrl,
+                Name = message.Author.Username
+            },
+            Footer = new DiscordEmbedBuilder.EmbedFooter
+            {
+                Text = "Timestamp"
+            }
         };
+        if(message.Attachments.Count > 0)
+        {
+            embed.ImageUrl = message.Attachments.First().Url;
+        }
         await logChannel.SendMessageAsync(embed: embed);
     }
 
-    
+    /*public static async Task CreateDropdownMenu(CommandContext ctx) {
+        var interactivity = ctx.Client.GetInteractivity();
+
+        var redRole = ctx.Guild.GetRole(1065731560525017138);
+        var blueRole = ctx.Guild.GetRole(1065731577281253546);
+        var greenRole = ctx.Guild.GetRole(1065731590476550165);
+
+        var menu = new DiscordEmbedBuilder
+        {
+            Title = "Select a role",
+            Description = "Please select one of the following roles:",
+            Color = DiscordColor.Green
+        };
+        var redButton = new DiscordEmoji("🔴");
+        var blueButton = new DiscordEmoji("🔵");
+        var greenButton = new DiscordEmoji("🟢");
+
+        var message = await ctx.RespondAsync(embed: menu);
+        await message.CreateReactionAsync(redButton);
+        await message.CreateReactionAsync(blueButton);
+        await message.CreateReactionAsync(greenButton);
+
+        var reactionResult = await interactivity.WaitForReactionAsync(
+            x => x.Message == message &&
+                 (x.Emoji == redButton || x.Emoji == blueButton || x.Emoji == greenButton)
+            );
+
+        var role = reactionResult.Emoji switch
+        {
+            DiscordEmoji.FromName(ctx.Client, "🔴") => redRole,
+            DiscordEmoji.FromName(ctx.Client, "🔵") => blueRole,
+            DiscordEmoji.FromName(ctx.Client, "🟢") => greenRole,
+            _ => null
+        };
+
+        if (role != null)
+        {
+            await ctx.Member.GrantRoleAsync(role);
+            await ctx.RespondAsync($"You have been granted the {role.Name} role!");
+        }
+        else
+        {
+            await ctx.RespondAsync("Invalid reaction, please try again.");
+        }
+    }*/
+    //TODO: Пофиксить.
+
+    public static async Task CreateSelectMenu(CommandContext ctx)
+    {
+        var interactivity = ctx.Client.GetInteractivity();
+
+        var redRole = ctx.Guild.GetRole(1065731560525017138);
+        var blueRole = ctx.Guild.GetRole(1065731577281253546);
+        var greenRole = ctx.Guild.GetRole(1065731590476550165);
+
+        var menu = new DiscordEmbedBuilder
+        {
+            Title = "Select a role",
+            Description = "Please select one of the following roles:",
+            Color = DiscordColor.Green
+        };
+        menu.AddField("1", "Red role", true);
+        menu.AddField("2", "Blue role", true);
+        menu.AddField("3", "Green role", true);
+
+        var message = await ctx.RespondAsync(embed: menu);
+
+        var response = await interactivity.WaitForMessageAsync(
+            x => x.Author == ctx.User &&
+                 (x.Content == "1" || x.Content == "2" || x.Content == "3"));
+
+        var role = response.Result.Content switch
+        {
+            "1" => redRole,
+            "2" => blueRole,
+            "3" => greenRole,
+            _ => null
+        };
+
+        if (role != null)
+        {
+            await ctx.Member.GrantRoleAsync(role);
+            await ctx.RespondAsync($"You have been granted the {role.Name} role!");
+        }
+        else
+        {
+            await ctx.RespondAsync("Error");
+        }
+    }
+
+ 
+   
 }
