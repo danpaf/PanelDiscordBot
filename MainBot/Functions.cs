@@ -4,11 +4,13 @@ using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.SlashCommands;
 
 namespace MainBot;
 
 public static class Funcs
 {
+    
     public static ulong loggingChannelId = 1065686308091084860;
     public static async Task DeleteMessagesAsync(DiscordClient discord, DiscordChannel channel, int count)
     {
@@ -47,6 +49,7 @@ public static class Funcs
     public static async Task DeleteCommandMessage(CommandContext ctx) {
         await ctx.Message.DeleteAsync();
     }
+
     private static async Task LogMessage(DiscordClient client, DiscordMessage message, ulong logChannelId) {
         var logChannel = await client.GetChannelAsync(logChannelId);
         var embed = new DiscordEmbedBuilder
@@ -162,6 +165,8 @@ public static class Funcs
         }
     }
 
- 
+
    
 }
+
+

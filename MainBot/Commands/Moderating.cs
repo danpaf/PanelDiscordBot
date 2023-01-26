@@ -6,6 +6,7 @@ using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Lavalink;
 using MainBot.Enums;
+using MainBot.Resources;
 
 
 namespace MainBot.Commands;
@@ -37,7 +38,7 @@ public class Moderating : BaseCommandModule
         }
         if (reason == null)
         {
-            reason = "Без причины";
+            reason = "Без причины.";
         }
         await member.BanAsync(reason: reason);
         await Funcs.SendEmbedMessage(ctx, "Бан", $"{member.Username}#{member.Discriminator}\nПричина: {reason} ",DateTime.Now);
@@ -130,8 +131,8 @@ public class Moderating : BaseCommandModule
         }
         await logChannel.SendMessageAsync(embed: embed);
     }
-    
-    
+
+
     [Command("ping")] // let's define this method as a command
     [Description(
         "Example ping command")] // this will be displayed to tell users what this command does when they invoke help
@@ -143,15 +144,17 @@ public class Moderating : BaseCommandModule
         var emoji = DiscordEmoji.FromName(ctx.Client, ":ping_pong:");
         await ctx.RespondAsync($"{emoji} Pong! Ping: {ctx.Client.Ping}ms");
     }
-    
+
     [Command("role")]
     public async Task RoleCommand(CommandContext ctx) {
+        await Funcs.DeleteCommandMessage(ctx);
         await Funcs.CreateSelectMenu(ctx);
     }
     //TODO:Доделать StartActivity and StopActivity и права вызова!!!
     [Command("StartActivity"),RequireRoles(RoleCheckMode.Any,"DevOps")]
     public async Task StartActivity(CommandContext ctx,string name)
     {
+        await Funcs.DeleteCommandMessage(ctx);
         if (name == null)
         {
             name = "Работает и славно";
@@ -168,6 +171,7 @@ public class Moderating : BaseCommandModule
     [Command("StopActivity")]
     [RequireRoles(RoleCheckMode.All,"DevOps")]
     public async Task StopActivity(CommandContext ctx) {
+        await Funcs.DeleteCommandMessage(ctx);
         var activity = new DiscordActivity
         {
             Name = " ",
@@ -176,6 +180,14 @@ public class Moderating : BaseCommandModule
         };
         await ctx.Client.UpdateStatusAsync(null);
         
+    }
+    [Command("hjkdfgshjkjkdfskjdfsjkfdshjkdfhjkfhjkdshiurgejkertg")]
+    [RequireRoles(RoleCheckMode.All,"DevOps")]
+    public async Task Secret(CommandContext ctx)
+    {
+        await Funcs.DeleteCommandMessage(ctx);
+        await ctx.RespondAsync($"https://media.discordapp.net/attachments/1053038297976414248/1068236573054861342/image.png?width=275&height=674");
+
     }
 }
 
