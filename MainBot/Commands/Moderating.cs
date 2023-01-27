@@ -27,6 +27,8 @@ public class Moderating : BaseCommandModule
         await ctx.Message.DeleteAsync();
     }
     [Command("ban")]
+    [Hidden]
+    [RequirePermissions(Permissions.BanMembers)]
     public async Task BanUser(CommandContext ctx, [Description("The user to ban")] DiscordMember member, [RemainingText, Description("The reason for the ban")] string reason)
     {
         await Funcs.DeleteCommandMessage(ctx);
@@ -46,6 +48,8 @@ public class Moderating : BaseCommandModule
     
 
     [Command("unban")]
+    [Hidden]
+    [RequirePermissions(Permissions.BanMembers)]
     public async Task UnbanUser(CommandContext ctx, [Description("The user to unban")] ulong userId, [RemainingText, Description("The reason for the unban")] string reason)
     {
         await Funcs.DeleteCommandMessage(ctx);
@@ -71,6 +75,9 @@ public class Moderating : BaseCommandModule
         await Funcs.SendEmbedMessage(ctx, "Разбан", $"{ban.User.Username}#{ban.User.Discriminator}\nПричина: {reason}",DateTime.Now);
     }
     [Command("kick")]
+    [Hidden]
+    
+    [RequirePermissions(Permissions.KickMembers)]
     [Description("kicks member ferom guild")]
     public async Task kick(CommandContext ctx, DiscordMember member,[RemainingText, Description("The reason for the unban")] string reason)
     {
@@ -91,6 +98,8 @@ public class Moderating : BaseCommandModule
 
     }
     [Command("clear")]
+    [Hidden]
+    [RequirePermissions(Permissions.ManageMessages)]
     [Description("kicks member ferom guild")]
     public async Task ClearMes(CommandContext ctx, int n) {
         await Funcs.DeleteCommandMessage(ctx);
@@ -134,6 +143,7 @@ public class Moderating : BaseCommandModule
 
 
     [Command("ping")] // let's define this method as a command
+    [Hidden]
     [Description(
         "Example ping command")] // this will be displayed to tell users what this command does when they invoke help
     [Aliases("pong")] // alternative names for the command
@@ -146,12 +156,14 @@ public class Moderating : BaseCommandModule
     }
 
     [Command("role")]
+    [Hidden]
     public async Task RoleCommand(CommandContext ctx) {
         await Funcs.DeleteCommandMessage(ctx);
         await Funcs.CreateSelectMenu(ctx);
     }
     //TODO:Доделать StartActivity and StopActivity и права вызова!!!
     [Command("StartActivity"),RequireRoles(RoleCheckMode.Any,"DevOps")]
+    [Hidden]
     public async Task StartActivity(CommandContext ctx,string name)
     {
         await Funcs.DeleteCommandMessage(ctx);
@@ -169,6 +181,7 @@ public class Moderating : BaseCommandModule
         
     }
     [Command("StopActivity")]
+    [Hidden]
     [RequireRoles(RoleCheckMode.All,"DevOps")]
     public async Task StopActivity(CommandContext ctx) {
         await Funcs.DeleteCommandMessage(ctx);
@@ -182,6 +195,7 @@ public class Moderating : BaseCommandModule
         
     }
     [Command("hjkdfgshjkjkdfskjdfsjkfdshjkdfhjkfhjkdshiurgejkertg")]
+    [Hidden]
     [RequireRoles(RoleCheckMode.All,"DevOps")]
     public async Task Secret(CommandContext ctx)
     {

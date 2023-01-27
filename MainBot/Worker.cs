@@ -13,12 +13,16 @@ using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.CommandsNext.Entities;
 using DSharpPlus.EventArgs;
 using MainBot.Database;
+using MainBot.Database.Models;
 using MainBot.Logic;
+using Serilog;
 
 namespace MainBot;
 
 public class Bot : BackgroundService
 {
+   
+    private readonly ApplicationContext _db;
     private readonly DiscordClient _discord;
     private readonly IConfiguration _configuration;
     private readonly IServiceProvider _serviceCollection;
@@ -28,13 +32,19 @@ public class Bot : BackgroundService
 
     public Bot(IServiceScopeFactory scopeFactory, IConfiguration configuration, IServiceProvider serviceCollection)
     {
-       
+        _db = serviceCollection.GetRequiredService<ApplicationContext>();
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.Console()
+            .CreateLogger();   
+        var logFactory = new LoggerFactory().AddSerilog();
         _discord = new DiscordClient(
             new DiscordConfiguration
             {
+                
                 Token = configuration["token"],
                 TokenType = TokenType.Bot,
                 Intents = DiscordIntents.All,
+                LoggerFactory = logFactory
             });
         _serviceCollection = serviceCollection;
         var eventLogic = new EventLogic(_discord,scopeFactory);
@@ -42,13 +52,14 @@ public class Bot : BackgroundService
         eventLogic.RegisterEvents();
         _adminRoles = _configuration.GetSection("roles:adminRoles").Get<string[]>();
         _ownerRoles = _configuration.GetSection("roles:ownerRoles").Get<string[]>();
-
+        
+       
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-       
-
+        
+        
         _discord.UseInteractivity(
             new InteractivityConfiguration()
             {
@@ -68,28 +79,73 @@ public class Bot : BackgroundService
             
         };
 
-
+        
+        
         var slash = _discord.UseSlashCommands(new SlashCommandsConfiguration
         {
             Services = _serviceCollection
         });
         slash.RegisterCommands<SlashCommands>();
-        
+       
         this.Commands = this._discord.UseCommandsNext(ccfg);
         this.Commands.RegisterCommands<Moderating>();
-        
-      
-        
+        this.Commands.RegisterCommands<MusicCommand>();
+        this.Commands.CommandExecuted += async (s, e) =>
+        {
+            var cmd = e.Command;
+            var user = e.Context.User;
 
+            Log.Information("{Command} executed by {User}", cmd.Name, user.Username);
+        };  
+        slash.SlashCommandExecuted += async (s, e) =>
+        {
+            var cmd = e.Context;
+            var user = e.Context.User;
+            string? channel = _configuration["logChannelId"];
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle("Log")
+                .WithDescription("Command executed by user")
+                .AddField("Command", cmd.CommandName, true)
+                .AddField("User", user.Username, true)
+                .WithColor(DiscordColor.Green)
+                .Build();
+
+            Log.Information("{Command} executed by {User} ({UserId})", cmd.CommandName, user.Username,user.Id);
+            //await _discord.SendMessageAsync(channel,embed: embed);
+        };     
+        
+        
+    //Getting all server members
+         async Task AddAllUsersToDatabase()
+        {
+            var guild = await _discord.GetGuildAsync(Convert.ToUInt64(_configuration["guild:guild_1"]));
+            var users = await guild.GetAllMembersAsync();
+    
+            foreach (var user in users)
+            {
+                var dbUser = _db.Users.FirstOrDefault(x => x.DiscordId == user.Id);
+                if (dbUser != null) continue;
+
+                 dbUser = new User
+                {
+                    DiscordId = user.Id,
+                    Name = user.Username,
+                    Discriminant = user.Discriminator
+                };
+
+                _db.Users.Add(dbUser);
+            }
+
+            _db.SaveChanges();
+        }
+        
+        AddAllUsersToDatabase();
+         Funcs.StartActityBotStarting(_discord);
         _discord.ConnectAsync().GetAwaiter().GetResult();
+        
+        
         await Task.Delay(-1);   
     }
 
-    /*private async Task OnMessageCreated(MessageCreateEventArgs e, List<DiscordApplicationCommand> commands)
-    {
-        foreach (var cmd in commands)
-        {
-            await cmd.Execute(e);
-        }
-    }*/
+
 }

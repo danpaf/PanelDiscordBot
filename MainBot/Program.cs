@@ -13,6 +13,13 @@ IHost host = Host.CreateDefaultBuilder(args)
             services.AddSingleton<ApplicationContext>();
             services.AddHostedService<Bot>();
         })
+    .ConfigureLogging(
+        logging =>
+        {
+            logging.ClearProviders();
+            logging.AddDebug();
+            //logging.AddConsole();
+        })
     .Build();
 
 await host.RunAsync();

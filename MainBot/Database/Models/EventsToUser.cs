@@ -17,5 +17,6 @@ public class EventToUser
     [ForeignKey("UserUid")]
     public User User { get; init; }
     public DateTime CreatedAt { get; init; }
+    public string Reason { get; init; }
     
 }

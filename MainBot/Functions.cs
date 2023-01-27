@@ -5,11 +5,24 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
+using MainBot.Database;
+using MainBot.Database.Models;
 
 namespace MainBot;
 
-public static class Funcs
+public class Funcs
 {
+    private readonly ApplicationContext _db;
+    private readonly DiscordClient _discord;
+   
+
+    public Funcs(IServiceProvider services)
+    {
+        _db = services.GetRequiredService<ApplicationContext>();
+        _discord = _discord;
+    }
+
+    
     
     public static ulong loggingChannelId = 1065686308091084860;
     public static async Task DeleteMessagesAsync(DiscordClient discord, DiscordChannel channel, int count)
@@ -20,6 +33,24 @@ public static class Funcs
     
     public static async Task BanMemberAsync(DiscordClient discord, DiscordMember member, int daysOfMessagesToDelete = 0, string reason = "") {
         await member.BanAsync(daysOfMessagesToDelete, reason);
+    }
+    public static async Task StartActityBotStarting(DiscordClient client) {
+        var start = new DiscordActivity
+        {
+            Name = "Bot Starting...",
+            
+            ActivityType = ActivityType.Playing
+        };
+        await client.UpdateStatusAsync(start);
+        await Task.Delay(5000); 
+        var started = new DiscordActivity
+        {
+            Name = "Bot Started",
+            
+            ActivityType = ActivityType.Playing
+        };
+        await client.UpdateStatusAsync(started);
+        
     }
     public static async Task SendEmbedMessage(CommandContext ctx, string title, string description, DateTime Timestamp )
     {
@@ -32,6 +63,18 @@ public static class Funcs
         };
 
         await ctx.RespondAsync(embed: embed);
+    }
+    public static async Task SendEmbedMessageItx(InteractionContext itx, string title, string description, DateTime Timestamp )
+    {
+        var embed = new DiscordEmbedBuilder
+        {
+            Title = title,
+            Description = description,
+            Timestamp = DateTime.Now,
+            Color = DiscordColor.Green
+        };
+
+        await itx.CreateResponseAsync(embed: embed);
     }
     public static async Task AutoDeleteMessage(DiscordMessage message) {
         await Task.Delay(5000); // waits for 5 seconds
@@ -48,6 +91,9 @@ public static class Funcs
 
     public static async Task DeleteCommandMessage(CommandContext ctx) {
         await ctx.Message.DeleteAsync();
+    }
+    public static async Task DeleteCommandMessageItx(InteractionContext ctx) {
+        await ctx.Guild.DeleteAsync();
     }
 
     private static async Task LogMessage(DiscordClient client, DiscordMessage message, ulong logChannelId) {

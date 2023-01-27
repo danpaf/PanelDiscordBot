@@ -28,68 +28,80 @@ public class SlashCommands : ApplicationCommandModule
 
     [SlashCommand("ban", "Bans a user")]
     [SlashRequirePermissions(Permissions.BanMembers)]
-    public async Task Ban(InteractionContext ctx, [Option("user", "User to ban")] DiscordUser user,
+    public async Task Ban(InteractionContext itx, [Option("user", "User to ban")] DiscordUser user,
         [Choice("None", 0)]
         [Choice("1 Day", 1)]
         [Choice("1 Week", 7)]
         [Option("deletedays", "Number of days of message history to delete")] long deleteDays = 0)
     {
-        await ctx.Guild.BanMemberAsync(user.Id, (int)deleteDays);
-        await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Banned {user.Username}"));
+        await itx.Guild.BanMemberAsync(user.Id, (int)deleteDays);
+        await itx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Banned {user.Username}"));
+        Funcs.DeleteCommandMessageItx(itx);
     }
+ 
     [SlashCommand("warn", "Warn a user")]
     [SlashRequirePermissions(Permissions.BanMembers)]
-    public async Task Warn(InteractionContext itx, [Option("user", "User to warn")] DiscordUser member)
+    public async Task Warn(InteractionContext itx, [Option("user", "User to warn")] DiscordUser member,[Option("reason", "Reason for removing warning")] string reason)
     {
         
-        /*public static async Task<int> AddWarningAsync(this User member)
-    {
-        var warnings = _userWarnings.AddOrUpdate(member.Id, 1, (key, oldValue) => oldValue + 1);
-        await member.SendMessageAsync("You have been warned. You now have " + warnings + " warnings.");
-        if (warnings >= 3)
-        {
-            await member.BanAsync(7,"Reached the maximum number of warnings");
-            _userWarnings.TryRemove(member.Id, out _);
-            await member.Guild.GetDefaultChannel().SendMessageAsync($"{member.Username} has been banned for {_banDuration.Days} days for getting 3 warnings.");
-        }
-        return warnings;
-    }*/
+      
         var user = _db.Users.Include(x => x.Events).FirstOrDefault(x => x.DiscordId == member.Id);
         var warnEvent = _db.Events.First(x => x.Name == "Warning");
         var warningCount = (from u in _db.Users
             join etu in _db.EventToUsers on u.Uid equals etu.UserUid
             where u.Uid == user.Uid && etu.EventUid == warnEvent.Uid
             select u).Count();
-        if (warningCount >= 3)
+               
+        if (warningCount == 3)
         {
             await itx.Guild.BanMemberAsync(member.Id,7,$"{member.Username} has been banned for 7 days for getting 3 warnings.");
-            /*var entity = _db.EventToUsers.First(x => x.UserUid == "useruid");
+            var entity = _db.EventToUsers.Where(x => x.UserUid == user.Uid && x.EventUid == warnEvent.Uid).ToList();
             if (entity != null)
             {
-                _db.Users.Remove(entity);
+                _db.EventToUsers.RemoveRange(entity);
                 _db.SaveChanges();
-            }*/
-            //TODO:ДОПИСАТЬ УДАЛЕНИЕ ИЗ БД
+            }
+            
             await itx.Guild.GetDefaultChannel().SendMessageAsync($"{member.Username} has been banned for 7 days for getting 3 warnings.");
         }
         _db.EventToUsers.Add(
             new EventToUser
             {
                 UserUid = user.Uid,
-                EventUid = warnEvent.Uid
+                EventUid = warnEvent.Uid,
+                Reason = reason
             });
 
         _db.SaveChanges();
-        await itx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Banned "));
+        var emeb = Funcs.SendEmbedMessageItx(itx, "Warn", $"{member.Username}#{member.Discriminator}\nПричина: {reason} ", DateTime.Now);
+        await itx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"{emeb}"));
+        Funcs.DeleteCommandMessageItx(itx);
 
     }
-
-    [SlashCommand("ping", "Checks the latency between the bot and it's database. Best used to see if the bot is lagging.")]
-    public async Task Ping(InteractionContext context) => await context.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new()
+    
+    [SlashCommand("unwarn", "Remove a warning from a user")]
+    [SlashRequirePermissions(Permissions.BanMembers)]
+    public async Task Unwarn(InteractionContext itx, [Option("user", "User to remove warning from")] DiscordUser member)
     {
-        Content = $"Pong! Database latency is {context.Client.Ping}ms."
-    });
-
+        var user = _db.Users.Include(x => x.Events).FirstOrDefault(x => x.DiscordId == member.Id);
+        var warnEvent = _db.Events.First(x => x.Name == "Warning");
+        var warningToRemove = _db.EventToUsers.FirstOrDefault(x => x.UserUid == user.Uid && x.EventUid == warnEvent.Uid);
+       
+        if(warningToRemove != null)
+        {
+            _db.EventToUsers.Remove(warningToRemove);
+            _db.SaveChanges();
+            var emeb = Funcs.SendEmbedMessageItx(itx, "UnWarn", $"{member.Username}#{member.Discriminator}\n", DateTime.Now);
+            
+            await itx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"{emeb}"));
+        }
+        else
+        {
+            await itx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"{member.Username} doesn't have any warnings to remove"));
+        }
+        Funcs.DeleteCommandMessageItx(itx);
+    }
+        
 
     [ContextMenu(ApplicationCommandType.UserContextMenu, "User Menu")]
     public async Task UserMenu(ContextMenuContext ctx)
