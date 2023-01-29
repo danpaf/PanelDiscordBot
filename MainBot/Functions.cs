@@ -3,6 +3,7 @@ using DSharpPlus.Entities;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using MainBot.Database;
@@ -14,12 +15,15 @@ public class Funcs
 {
     private readonly ApplicationContext _db;
     private readonly DiscordClient _discord;
+    private readonly IConfiguration _configuration;
+    private readonly IServiceProvider _serviceCollection;
    
 
-    public Funcs(IServiceProvider services)
+    public Funcs(IServiceProvider services,IConfiguration configuration,DiscordClient discord)
     {
         _db = services.GetRequiredService<ApplicationContext>();
-        _discord = _discord;
+        _discord = discord;
+        _configuration = configuration;
     }
 
     
@@ -90,11 +94,15 @@ public class Funcs
     }
 
     public static async Task DeleteCommandMessage(CommandContext ctx) {
+        await Task.Delay(5000);
         await ctx.Message.DeleteAsync();
     }
-    public static async Task DeleteCommandMessageItx(InteractionContext ctx) {
+    public static async Task DeleteCommandMessageItx(InteractionContext ctx)
+    {
+        await Task.Delay(5000);
         await ctx.Guild.DeleteAsync();
     }
+    
 
     private static async Task LogMessage(DiscordClient client, DiscordMessage message, ulong logChannelId) {
         var logChannel = await client.GetChannelAsync(logChannelId);
@@ -120,7 +128,34 @@ public class Funcs
         }
         await logChannel.SendMessageAsync(embed: embed);
     }
+    /*public async Task ModalSubmitted(DiscordClient sender, ModalSubmitEventArgs e)
+    {
+        try
+        {
+            if (e.Interaction.Data.CustomId != "modalForBugReports") return;
 
+            var guild = await sender.GetGuildAsync("гуилд"));
+            var channel = guild.GetChannel("канал с кнопкой");
+
+            var threadAsync = await channel.CreateThreadAsync(e.Values.Values.ToList()[1], AutoArchiveDuration.ThreeDays,
+                ChannelType.PrivateThread);
+
+            await threadAsync.SendMessageAsync(
+                $"**Баг репорт от:** ({e.Values.Values.ToList()[0]}) <@{e.Interaction.User.Id}>\n\n>>> {e.Values.Values.ToList()[2]}");
+            
+
+            var notifyChannel = guild.GetChannel("канал");
+            await notifyChannel.SendMessageAsync($"<@&875777615422685225> <@&974369538231652424> Поступил новый репорт. Проверьте канал <#{threadAsync.Id}>");
+
+            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+        }
+        catch (BadRequestException exception)
+        {
+            Console.WriteLine(exception.JsonMessage);
+            Console.WriteLine(exception.Errors);
+        }
+    }*/
+    //TODO:ДОПИСАТЬ КНОПКИ
     /*public static async Task CreateDropdownMenu(CommandContext ctx) {
         var interactivity = ctx.Client.GetInteractivity();
 

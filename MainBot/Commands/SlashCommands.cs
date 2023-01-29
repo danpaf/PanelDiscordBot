@@ -19,10 +19,11 @@ public class SlashCommands : ApplicationCommandModule
 {
     
     private readonly ApplicationContext _db;
-
-    public SlashCommands(IServiceProvider services)
+    private readonly IConfiguration _configuration;
+    public SlashCommands(IServiceProvider services,IConfiguration configuration)
     {
         _db = services.GetRequiredService<ApplicationContext>();
+        _configuration = configuration;
     }
     //public ApplicationContext Db{ get; set; }
 
@@ -76,6 +77,7 @@ public class SlashCommands : ApplicationCommandModule
         var emeb = Funcs.SendEmbedMessageItx(itx, "Warn", $"{member.Username}#{member.Discriminator}\nПричина: {reason} ", DateTime.Now);
         await itx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"{emeb}"));
         Funcs.DeleteCommandMessageItx(itx);
+        
 
     }
     

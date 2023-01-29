@@ -31,10 +31,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Services" />
-    </ItemGroup>
-
-    <ItemGroup>
       <EmbeddedResource Update="Resources\DiscordBotResource.ru.resx">
         <Generator>ResXFileCodeGenerator</Generator>
         <LastGenOutput>DiscordBotResource.ru.Designer.cs</LastGenOutput>

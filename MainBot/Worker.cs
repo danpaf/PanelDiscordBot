@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
@@ -24,6 +25,7 @@ public class Bot : BackgroundService
    
     private readonly ApplicationContext _db;
     private readonly DiscordClient _discord;
+
     private readonly IConfiguration _configuration;
     private readonly IServiceProvider _serviceCollection;
     public CommandsNextExtension Commands { get; set; }
@@ -40,20 +42,21 @@ public class Bot : BackgroundService
         _discord = new DiscordClient(
             new DiscordConfiguration
             {
-                
                 Token = configuration["token"],
                 TokenType = TokenType.Bot,
                 Intents = DiscordIntents.All,
                 LoggerFactory = logFactory
             });
         _serviceCollection = serviceCollection;
+
+
         var eventLogic = new EventLogic(_discord,scopeFactory);
         _configuration = configuration;
         eventLogic.RegisterEvents();
         _adminRoles = _configuration.GetSection("roles:adminRoles").Get<string[]>();
         _ownerRoles = _configuration.GetSection("roles:ownerRoles").Get<string[]>();
+
         
-       
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -90,28 +93,42 @@ public class Bot : BackgroundService
         this.Commands = this._discord.UseCommandsNext(ccfg);
         this.Commands.RegisterCommands<Moderating>();
         this.Commands.RegisterCommands<MusicCommand>();
+        
         this.Commands.CommandExecuted += async (s, e) =>
         {
             var cmd = e.Command;
-            var user = e.Context.User;
+            var user = e.Context;
 
-            Log.Information("{Command} executed by {User}", cmd.Name, user.Username);
+            Log.Information("{Command} executed by {User}", cmd.Name, user.User.Username);
+            var channel = await _discord.GetChannelAsync(Convert.ToUInt64(_configuration["logChannelId"]));
+            
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle("Log")
+                .WithDescription("Command executed by user")
+                .AddField("Command", cmd.Name, true)
+                .AddField("User", user.User.Mention, true)
+                .WithTimestamp(DateTime.Now)
+                .WithColor(DiscordColor.Green)
+                .Build();
+            channel.SendMessageAsync(embed: embed);
         };  
         slash.SlashCommandExecuted += async (s, e) =>
         {
             var cmd = e.Context;
             var user = e.Context.User;
-            string? channel = _configuration["logChannelId"];
+            
+            Log.Information("{Command} executed by {User} ({UserId})", cmd.CommandName, user.Username,user.Id);
+            var channel = await _discord.GetChannelAsync(Convert.ToUInt64(_configuration["logChannelId"]));
+            
             var embed = new DiscordEmbedBuilder()
                 .WithTitle("Log")
                 .WithDescription("Command executed by user")
                 .AddField("Command", cmd.CommandName, true)
-                .AddField("User", user.Username, true)
+                .AddField("User", user.Mention, true)
+                .WithTimestamp(DateTime.Now)
                 .WithColor(DiscordColor.Green)
                 .Build();
-
-            Log.Information("{Command} executed by {User} ({UserId})", cmd.CommandName, user.Username,user.Id);
-            //await _discord.SendMessageAsync(channel,embed: embed);
+            channel.SendMessageAsync(embed: embed);
         };     
         
         
@@ -135,11 +152,13 @@ public class Bot : BackgroundService
 
                 _db.Users.Add(dbUser);
             }
+            
 
             _db.SaveChanges();
         }
         
-        AddAllUsersToDatabase();
+        
+         AddAllUsersToDatabase();
          Funcs.StartActityBotStarting(_discord);
         _discord.ConnectAsync().GetAwaiter().GetResult();
         

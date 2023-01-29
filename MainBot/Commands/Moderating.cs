@@ -2,6 +2,8 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity;
+using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Lavalink;
@@ -149,12 +151,40 @@ public class Moderating : BaseCommandModule
     [Aliases("pong")] // alternative names for the command
     public async Task Ping(CommandContext ctx) // this command takes no arguments
     {
-        await Funcs.DeleteCommandMessage(ctx);
+        
         await ctx.TriggerTypingAsync();
         var emoji = DiscordEmoji.FromName(ctx.Client, ":ping_pong:");
         await ctx.RespondAsync($"{emoji} Pong! Ping: {ctx.Client.Ping}ms");
+        await Funcs.DeleteCommandMessage(ctx);
+    }
+    public async Task CreateTicket(ComponentInteractionCreateEventArgs e)
+    {
+        var response = new DiscordInteractionResponseBuilder()
+            .WithTitle("Ticket Creation")
+            .WithContent("You will be able to attach images in the thread after submitting the ticket.")
+            .WithCustomId("ticketModal")
+            .AddComponents(new TextInputComponent("Your Server Character", "serverCharacter",
+                "Enter your server character name", required: true, min_length: 3))
+            .AddComponents(new TextInputComponent("Ticket Title", "ticketTitle",
+                "Enter a brief title for the ticket", required: true, min_length: 3))
+            .AddComponents(new TextInputComponent("Ticket Description", "ticketDescription",
+                "Enter a detailed description of the issue", required: true, min_length: 3, style: TextInputStyle.Paragraph));
+
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.Modal, response);
+         
     }
 
+    /*[Command("ticket")]
+    public async Task CreationTicketCommand(ComponentInteractionCreateEventArgs contextevent)
+    {
+        var response = new DiscordInteractionResponseBuilder()
+            .WithContent("Click the button to open the ticket modal")
+            .AddComponents(new DiscordButtonComponent(ButtonStyle.Primary, "ticketModal", "ticket"))
+            .Build();
+
+        await contextevent.Message.CreateReactionAsync(response);
+    }*/
+    //TODO:см первый туду и доделать ЕТУ
     [Command("role")]
     [Hidden]
     public async Task RoleCommand(CommandContext ctx) {
@@ -194,6 +224,28 @@ public class Moderating : BaseCommandModule
         await ctx.Client.UpdateStatusAsync(null);
         
     }
+
+
+    [Command("createTicket")]
+    [Hidden]
+    [RequireRoles(RoleCheckMode.All,"DevOps")]
+    public async Task CreateTicket(CommandContext ctx,ComponentInteractionCreateEventArgs e)
+    {
+        await Funcs.DeleteCommandMessage(ctx);
+        var response = new DiscordInteractionResponseBuilder()
+            .WithTitle("Ticket Creation")
+            .WithContent("You will be able to attach screenshots in the thread after submitting the ticket.")
+            .WithCustomId("ticketModal")
+            .AddComponents(new TextInputComponent("Your server character name", "serverCharacterTicket",
+                "Enter your server character name", required: true, min_length: 3))
+            .AddComponents(new TextInputComponent("Problem title", "titleTicket",
+                "Briefly describe the problem", required: true, min_length: 3))
+            .AddComponents(new TextInputComponent("Problem description", "descriptionTicket",
+                "Provide a detailed description of the problem", required: true, min_length: 3, style: TextInputStyle.Paragraph));
+
+        await e.Interaction.CreateResponseAsync(InteractionResponseType.Modal,response);
+    }
+
     [Command("hjkdfgshjkjkdfskjdfsjkfdshjkdfhjkfhjkdshiurgejkertg")]
     [Hidden]
     [RequireRoles(RoleCheckMode.All,"DevOps")]
