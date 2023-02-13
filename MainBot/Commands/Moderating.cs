@@ -7,24 +7,17 @@ using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Lavalink;
+using MainBot.Database;
 using MainBot.Enums;
 using MainBot.Resources;
+using MainBot.Services;
 
 
 namespace MainBot.Commands;
 
 public class Moderating : BaseCommandModule
 {
-    public static IConfiguration _configuration;
-    private readonly string[] _adminRoles;
-    private readonly string[] _ownerRoles;
-
-    /*public Moderating(IConfiguration configuration)
-    {
-        _configuration = configuration;
-        _adminRoles = _configuration.GetSection("roles:adminRoles").Get<string[]>();
-        _ownerRoles = _configuration.GetSection("roles:ownerRoles").Get<string[]>();
-    }*/
+    
     private async Task DeleteCommandMessage(CommandContext ctx) {
         await ctx.Message.DeleteAsync();
     }
@@ -157,6 +150,7 @@ public class Moderating : BaseCommandModule
         await ctx.RespondAsync($"{emoji} Pong! Ping: {ctx.Client.Ping}ms");
         await Funcs.DeleteCommandMessage(ctx);
     }
+    /*
     public async Task CreateTicket(ComponentInteractionCreateEventArgs e)
     {
         var response = new DiscordInteractionResponseBuilder()
@@ -171,27 +165,40 @@ public class Moderating : BaseCommandModule
                 "Enter a detailed description of the issue", required: true, min_length: 3, style: TextInputStyle.Paragraph));
 
         await e.Interaction.CreateResponseAsync(InteractionResponseType.Modal, response);
-         
-    }
-
-    /*[Command("ticket")]
-    public async Task CreationTicketCommand(ComponentInteractionCreateEventArgs contextevent)
+        */
+    
+    [Command("ticket")]
+    [Hidden]
+    [RequireRoles(RoleCheckMode.All,"DevOps")]
+    public async Task CreationTicketCommand(CommandContext ctx)
     {
-        var response = new DiscordInteractionResponseBuilder()
-            .WithContent("Click the button to open the ticket modal")
-            .AddComponents(new DiscordButtonComponent(ButtonStyle.Primary, "ticketModal", "ticket"))
-            .Build();
+        var myButton = new DiscordButtonComponent(ButtonStyle.Success, "reportBug", "Создать тикет");
 
-        await contextevent.Message.CreateReactionAsync(response);
-    }*/
-    //TODO:см первый туду и доделать ЕТУ
+        var builder = new DiscordMessageBuilder()
+            .WithContent("Если Вы обнаружили баг/недоработку, то нажмите на кнопку 'Создать тикет' и подробно опишите вашу проблему.\n"+
+        "Вы сможете прикрепить графические вложения в ветке, после отправки тикета\n"+
+        "После чего с Вами свяжется один из технических администраторов.\n"+
+            "Чем подробнее Вы опишите проблему, тем быстрее мы ее решим!\n")
+            .AddComponents(myButton);
+        await ctx.Channel.SendMessageAsync(builder);
+        await ctx.Message.DeleteAsync();
+
+    } 
+    [Command("info")]
+    [Hidden]
+    [RequireRoles(RoleCheckMode.All,"DevOps")]
+    public async Task CreateInfoMes(CommandContext ctx)
+    {
+        await Funcs.DeleteCommandMessage(ctx);
+        await Funcs.ModalInfoMessage(ctx);
+
+    } 
     [Command("role")]
     [Hidden]
     public async Task RoleCommand(CommandContext ctx) {
         await Funcs.DeleteCommandMessage(ctx);
         await Funcs.CreateSelectMenu(ctx);
     }
-    //TODO:Доделать StartActivity and StopActivity и права вызова!!!
     [Command("StartActivity"),RequireRoles(RoleCheckMode.Any,"DevOps")]
     [Hidden]
     public async Task StartActivity(CommandContext ctx,string name)

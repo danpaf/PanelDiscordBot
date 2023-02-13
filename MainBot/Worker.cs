@@ -16,6 +16,7 @@ using DSharpPlus.EventArgs;
 using MainBot.Database;
 using MainBot.Database.Models;
 using MainBot.Logic;
+using MainBot.Services;
 using Serilog;
 
 namespace MainBot;
@@ -25,15 +26,16 @@ public class Bot : BackgroundService
    
     private readonly ApplicationContext _db;
     private readonly DiscordClient _discord;
-
+    private readonly ModalService _modalService;
     private readonly IConfiguration _configuration;
     private readonly IServiceProvider _serviceCollection;
     public CommandsNextExtension Commands { get; set; }
     private readonly string[] _adminRoles;
     private readonly string[] _ownerRoles;
 
-    public Bot(IServiceScopeFactory scopeFactory, IConfiguration configuration, IServiceProvider serviceCollection)
+    public Bot(IServiceScopeFactory scopeFactory, IConfiguration configuration, IServiceProvider serviceCollection, ModalService modalService)
     {
+        
         _db = serviceCollection.GetRequiredService<ApplicationContext>();
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
@@ -48,6 +50,7 @@ public class Bot : BackgroundService
                 LoggerFactory = logFactory
             });
         _serviceCollection = serviceCollection;
+        _modalService = modalService;
 
 
         var eventLogic = new EventLogic(_discord,scopeFactory);
@@ -93,7 +96,8 @@ public class Bot : BackgroundService
         this.Commands = this._discord.UseCommandsNext(ccfg);
         this.Commands.RegisterCommands<Moderating>();
         this.Commands.RegisterCommands<MusicCommand>();
-        
+        _discord.ComponentInteractionCreated += _modalService.ModalButtonPressed;
+        _discord.ModalSubmitted += _modalService.ModalSubmitted;
         this.Commands.CommandExecuted += async (s, e) =>
         {
             var cmd = e.Command;

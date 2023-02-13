@@ -128,34 +128,31 @@ public class Funcs
         }
         await logChannel.SendMessageAsync(embed: embed);
     }
-    /*public async Task ModalSubmitted(DiscordClient sender, ModalSubmitEventArgs e)
+    public static async Task ModalInfoMessage(CommandContext ctx)
     {
-        try
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder
         {
-            if (e.Interaction.Data.CustomId != "modalForBugReports") return;
-
-            var guild = await sender.GetGuildAsync("гуилд"));
-            var channel = guild.GetChannel("канал с кнопкой");
-
-            var threadAsync = await channel.CreateThreadAsync(e.Values.Values.ToList()[1], AutoArchiveDuration.ThreeDays,
-                ChannelType.PrivateThread);
-
-            await threadAsync.SendMessageAsync(
-                $"**Баг репорт от:** ({e.Values.Values.ToList()[0]}) <@{e.Interaction.User.Id}>\n\n>>> {e.Values.Values.ToList()[2]}");
+            Title = "Добро пожаловать на тут имя !",
+            Description =
+                "Это место, где вы можете исследовать, строить и играть с другими людьми в виртуальном мире. Наш сервер предлагает большие возможности для совместной игры и творчества, а также множество уникальных карт и модификаций, чтобы ваш опыт игры был незабываемым. Присоединяйтесь к нам и давайте начнем нашу приключение вместе!",
+            Color = new DiscordColor("#7289DA")
+        };
+        
+        var builder = new DiscordMessageBuilder()
+            .WithEmbed(embed)
             
+            .AddComponents(new DiscordComponent[]
+            {
+                
+                new DiscordLinkButtonComponent("https://ya.ru/", "Наш сайт!"),
+                new DiscordLinkButtonComponent("https://ya.ru/", "ТГ канал!"),
+                new DiscordLinkButtonComponent("https://ya.ru/", "Ссылка на лаунчер")
+            });
 
-            var notifyChannel = guild.GetChannel("канал");
-            await notifyChannel.SendMessageAsync($"<@&875777615422685225> <@&974369538231652424> Поступил новый репорт. Проверьте канал <#{threadAsync.Id}>");
-
-            await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
-        }
-        catch (BadRequestException exception)
-        {
-            Console.WriteLine(exception.JsonMessage);
-            Console.WriteLine(exception.Errors);
-        }
-    }*/
-    //TODO:ДОПИСАТЬ КНОПКИ
+        await ctx.RespondAsync(builder);
+        
+    }
+    
     /*public static async Task CreateDropdownMenu(CommandContext ctx) {
         var interactivity = ctx.Client.GetInteractivity();
 
