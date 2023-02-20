@@ -1,3 +1,4 @@
+using System.Drawing;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -17,20 +18,23 @@ namespace MainBot.Commands;
 
 public class Moderating : BaseCommandModule
 {
-    
-    private async Task DeleteCommandMessage(CommandContext ctx) {
+
+    private async Task DeleteCommandMessage(CommandContext ctx)
+    {
         await ctx.Message.DeleteAsync();
     }
+
     [Command("ban")]
     [Hidden]
     [RequirePermissions(Permissions.BanMembers)]
-    public async Task BanUser(CommandContext ctx, [Description("The user to ban")] DiscordMember member, [RemainingText, Description("The reason for the ban")] string reason)
+    public async Task BanUser(CommandContext ctx, [Description("The user to ban")] DiscordMember member,
+        [RemainingText, Description("The reason for the ban")] string reason)
     {
         await Funcs.DeleteCommandMessage(ctx);
         if (!ctx.Member.PermissionsIn(ctx.Channel).HasPermission(Permissions.BanMembers))
         {
-          DiscordMessage message =  await ctx.RespondAsync("Не достаточно прав для бана.");
-          await Funcs.AutoDeleteMessage(message);
+            DiscordMessage message = await ctx.RespondAsync("Не достаточно прав для бана.");
+            await Funcs.AutoDeleteMessage(message);
             return;
         }
         if (reason == null)
@@ -38,9 +42,13 @@ public class Moderating : BaseCommandModule
             reason = "Без причины.";
         }
         await member.BanAsync(reason: reason);
-        await Funcs.SendEmbedMessage(ctx, "Бан", $"{member.Username}#{member.Discriminator}\nПричина: {reason} ",DateTime.Now);
+        await Funcs.SendEmbedMessage(ctx, "Бан", $"{member.Username}#{member.Discriminator}\nПричина: {reason} ", DateTime.Now);
     }
     
+
+
+
+
 
     [Command("unban")]
     [Hidden]
@@ -193,6 +201,82 @@ public class Moderating : BaseCommandModule
         await Funcs.ModalInfoMessage(ctx);
 
     } 
+    [Command("bet")]
+    [Hidden]
+    [RequireRoles(RoleCheckMode.All, "DevOps")]
+    public async Task BingoGame(CommandContext ctx, int bet)
+    {
+        
+        int winNumber = 2;
+        int win = 0;
+        await Funcs.DeleteCommandMessage(ctx);
+
+        // Generate the initial card numbers and matching numbers
+       
+        int[] cardNumbers = BingoBitmapService.GenerateRandomCard();
+        int[] matchingNumbers = BingoBitmapService.GenerateRandomNumbers();
+        
+        Random rnd = new Random();
+        int multiplayer = rnd.Next(3, 5);
+        // Get the initial bingo bitmap with no red dots
+        var bitmap = BingoBitmapService.GetColoredBingoBitmap(cardNumbers, Array.Empty<int>(),bet);
+        BingoBitmapService.HighlightRandomNumbers(bitmap, cardNumbers, multiplayer);
+        // Send the message with the initial card numbers and the bingo card
+        var messageBuilder = new DiscordMessageBuilder()
+            .WithContent($"Цифры на карточке: {string.Join(", ", cardNumbers)}")
+            .AddFile("bingo.png", Funcs.BitmapToStream(bitmap));
+        
+        var message = await ctx.RespondAsync(messageBuilder);
+        await Task.Delay(TimeSpan.FromSeconds(2));
+    
+        // Highlight the matching numbers with red dots
+        for (int i = 0; i < matchingNumbers.Length; i++)
+        {
+            // If the matching number is present on the card, update the bitmap with the new number highlighted
+            if (cardNumbers.Contains(matchingNumbers[i]))
+            {
+                Point numberPosition = BingoBitmapService.GetNumberPositionOnBitmap(bitmap,cardNumbers, matchingNumbers[i]);
+                if (numberPosition.X >= 0 && numberPosition.Y >= 0)
+                {
+                    // Draw a red circle around the number
+                    using (Graphics g = Graphics.FromImage(bitmap))
+                    using (Pen pen = new Pen(Color.Red, 3))
+                    {
+                        g.DrawEllipse(pen, numberPosition.X - 25, numberPosition.Y - 25, 50, 50);
+                    }
+
+                    // Set the number to -1 to mark it as called
+                    cardNumbers[Array.IndexOf(cardNumbers, matchingNumbers[i])] = -1;
+                }
+            }
+
+
+            // Modify the existing message with the updated bitmap and matching numbers
+            messageBuilder = new DiscordMessageBuilder()
+                .WithContent($"Цифры выпали: {string.Join(", ", matchingNumbers.Take(i + 1))}")
+                .AddFile("bingo.png", Funcs.BitmapToStream(bitmap));
+
+            await message.ModifyAsync(messageBuilder);
+            await Task.Delay(TimeSpan.FromSeconds(2));
+        }
+        bool isWin = FuncsBingo.CheckForWin(cardNumbers, matchingNumbers);
+        if (isWin == false)
+        {
+            ctx.RespondAsync($"  You had loose {bet}");
+        }
+        if (isWin == true)
+        {
+            win = bet * 2;
+            ctx.RespondAsync($" You win {win}");
+        }
+        Console.WriteLine(isWin); // output: false
+    }
+
+
+
+
+
+
     [Command("role")]
     [Hidden]
     public async Task RoleCommand(CommandContext ctx) {

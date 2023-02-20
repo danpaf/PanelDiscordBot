@@ -7,7 +7,10 @@ using DSharpPlus.Exceptions;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using MainBot.Database;
+using System.Drawing;
+using System;
 using MainBot.Database.Models;
+using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
 namespace MainBot;
 
@@ -34,7 +37,14 @@ public class Funcs
         var messages = await channel.GetMessagesAsync(count);
         await channel.DeleteMessagesAsync(messages);
     }
-    
+    public static MemoryStream BitmapToStream(Bitmap bitmap)
+    {
+        var stream = new MemoryStream();
+        bitmap.Save(stream,ImageFormat.Png);
+        stream.Position = 0;
+        return stream;
+    }
+
     public static async Task BanMemberAsync(DiscordClient discord, DiscordMember member, int daysOfMessagesToDelete = 0, string reason = "") {
         await member.BanAsync(daysOfMessagesToDelete, reason);
     }
@@ -153,52 +163,23 @@ public class Funcs
         
     }
     
-    /*public static async Task CreateDropdownMenu(CommandContext ctx) {
-        var interactivity = ctx.Client.GetInteractivity();
-
-        var redRole = ctx.Guild.GetRole(1065731560525017138);
-        var blueRole = ctx.Guild.GetRole(1065731577281253546);
-        var greenRole = ctx.Guild.GetRole(1065731590476550165);
-
-        var menu = new DiscordEmbedBuilder
+    /*public static async Task GenerateCards(CommandContext ctx)
+    {
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder
         {
-            Title = "Select a role",
-            Description = "Please select one of the following roles:",
-            Color = DiscordColor.Green
+            Title = "Бинго!",
+            Description =
+                "Это твои карты!",
+            Color = new DiscordColor("#7289DA")
         };
-        var redButton = new DiscordEmoji("🔴");
-        var blueButton = new DiscordEmoji("🔵");
-        var greenButton = new DiscordEmoji("🟢");
-
-        var message = await ctx.RespondAsync(embed: menu);
-        await message.CreateReactionAsync(redButton);
-        await message.CreateReactionAsync(blueButton);
-        await message.CreateReactionAsync(greenButton);
-
-        var reactionResult = await interactivity.WaitForReactionAsync(
-            x => x.Message == message &&
-                 (x.Emoji == redButton || x.Emoji == blueButton || x.Emoji == greenButton)
-            );
-
-        var role = reactionResult.Emoji switch
-        {
-            DiscordEmoji.FromName(ctx.Client, "🔴") => redRole,
-            DiscordEmoji.FromName(ctx.Client, "🔵") => blueRole,
-            DiscordEmoji.FromName(ctx.Client, "🟢") => greenRole,
-            _ => null
-        };
-
-        if (role != null)
-        {
-            await ctx.Member.GrantRoleAsync(role);
-            await ctx.RespondAsync($"You have been granted the {role.Name} role!");
-        }
-        else
-        {
-            await ctx.RespondAsync("Invalid reaction, please try again.");
-        }
+        Bitmap image = CreateNumberArrayImage(10, 10);
+        
+        var builder = new DiscordMessageBuilder()
+            .WithEmbed(embed)
+            .AddComponents(buttons);
+        await ctx.RespondAsync(builder);
     }*/
-    //TODO: Пофиксить.
+
 
     public static async Task CreateSelectMenu(CommandContext ctx)
     {

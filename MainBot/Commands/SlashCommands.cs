@@ -2,6 +2,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Lavalink;
@@ -10,6 +11,7 @@ using MainBot.Database;
 using MainBot.Database.Models;
 using MainBot.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 
 namespace MainBot.Commands;
@@ -20,10 +22,14 @@ public class SlashCommands : ApplicationCommandModule
     
     private readonly ApplicationContext _db;
     private readonly IConfiguration _configuration;
+    private readonly ComponentInteractionCreateEventArgs _e;
+    private readonly CommandContext _ctx;
+    private readonly InteractionContext _itx;
     public SlashCommands(IServiceProvider services,IConfiguration configuration)
     {
         _db = services.GetRequiredService<ApplicationContext>();
         _configuration = configuration;
+
     }
     //public ApplicationContext Db{ get; set; }
 
@@ -39,7 +45,7 @@ public class SlashCommands : ApplicationCommandModule
         await itx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent($"Banned {user.Username}"));
         Funcs.DeleteCommandMessageItx(itx);
     }
- 
+   
     [SlashCommand("warn", "Warn a user")]
     [SlashRequirePermissions(Permissions.BanMembers)]
     public async Task Warn(InteractionContext itx, [Option("user", "User to warn")] DiscordUser member,[Option("reason", "Reason for removing warning")] string reason)
